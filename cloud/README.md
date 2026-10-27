@@ -13,7 +13,7 @@ The cloud autosave implementation is wired to the Drawnix UI on the `feature/clo
 
 ## Preview deployment watch paths
 
-The Pages project watches the application source, Pages Functions, cloud API/configuration, and build manifests so changes to this feature trigger preview deployments.
+The Pages project is configured to trigger preview deployments for changed repository files, including the app, Pages Functions, cloud API, and Wrangler configuration.
 
 ## Dedicated test resources
 
