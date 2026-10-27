@@ -49,6 +49,9 @@ async function cloudRequest<T>(path: string, init?: RequestInit): Promise<T> {
     } catch { /* keep HTTP status */ }
     throw new Error(code);
   }
+  if (!(response.headers.get('content-type') || '').includes('application/json')) {
+    throw new Error('ACCESS_LOGIN_REQUIRED');
+  }
   return response.json() as Promise<T>;
 }
 
@@ -65,6 +68,7 @@ function CloudSyncPanel({
   const [status, setStatus] = useState('尚未检查登录状态');
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [syncEnabled, setSyncEnabled] = useState(false);
   const lastSavedValue = useRef('');
 
   const refreshDocuments = async () => {
@@ -86,7 +90,7 @@ function CloudSyncPanel({
   useEffect(() => { void refreshDocuments(); }, []);
 
   useEffect(() => {
-    if (!selectedId || !revision) return;
+    if (!syncEnabled || !selectedId || !revision) return;
     const serialized = JSON.stringify(value);
     if (serialized === lastSavedValue.current) return;
     const timer = window.setTimeout(async () => {
@@ -108,7 +112,7 @@ function CloudSyncPanel({
       }
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [value, selectedId, revision]);
+  }, [value, selectedId, revision, syncEnabled]);
 
   const createCloudCopy = async () => {
     setBusy(true);
@@ -119,6 +123,7 @@ function CloudSyncPanel({
       );
       setSelectedId(result.id);
       setRevision(result.revision);
+      setSyncEnabled(true);
       localStorage.setItem(CLOUD_DOCUMENT_ID_KEY, result.id);
       localStorage.setItem(CLOUD_DOCUMENT_REVISION_KEY, String(result.revision));
       lastSavedValue.current = JSON.stringify(value);
@@ -140,6 +145,7 @@ function CloudSyncPanel({
       onRestore(restored);
       setSelectedId(doc.id);
       setRevision(doc.revision);
+      setSyncEnabled(true);
       localStorage.setItem(CLOUD_DOCUMENT_ID_KEY, doc.id);
       localStorage.setItem(CLOUD_DOCUMENT_REVISION_KEY, String(doc.revision));
       lastSavedValue.current = JSON.stringify(restored);
@@ -152,6 +158,7 @@ function CloudSyncPanel({
   };
 
   const stopCloudSync = () => {
+    setSyncEnabled(false);
     setSelectedId('');
     setRevision(0);
     localStorage.removeItem(CLOUD_DOCUMENT_ID_KEY);
