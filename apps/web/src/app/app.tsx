@@ -44,9 +44,11 @@ async function cloudRequest<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     let code = 'HTTP_' + response.status;
     try {
-      const body = await response.json() as { error?: string };
+      const body = (await response.json()) as { error?: string };
       if (body.error) code = body.error;
-    } catch { /* keep HTTP status */ }
+    } catch {
+      /* keep HTTP status */
+    }
     throw new Error(code);
   }
   if (!(response.headers.get('content-type') || '').includes('application/json')) {
@@ -63,8 +65,12 @@ function CloudSyncPanel({
   onRestore: (next: AppValue) => void;
 }) {
   const [documents, setDocuments] = useState<CloudDocument[]>([]);
-  const [selectedId, setSelectedId] = useState(() => localStorage.getItem(CLOUD_DOCUMENT_ID_KEY) || '');
-  const [revision, setRevision] = useState(() => Number(localStorage.getItem(CLOUD_DOCUMENT_REVISION_KEY) || 0));
+  const [selectedId, setSelectedId] = useState(
+    () => localStorage.getItem(CLOUD_DOCUMENT_ID_KEY) || ''
+  );
+  const [revision, setRevision] = useState(() =>
+    Number(localStorage.getItem(CLOUD_DOCUMENT_REVISION_KEY) || 0)
+  );
   const [status, setStatus] = useState('正在检查云端连接');
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -79,15 +85,19 @@ function CloudSyncPanel({
       setStatus('云端接口可用；请选择恢复或创建云端副本');
     } catch (error) {
       const message = error instanceof Error ? error.message : '连接失败';
-      setStatus(message === 'UNAUTHORIZED' || message === 'HTTP_401' || message === 'ACCESS_LOGIN_REQUIRED'
-        ? '需要先通过 Cloudflare Access 登录'
-        : '云端不可用：' + message);
+      setStatus(
+        message === 'UNAUTHORIZED' || message === 'HTTP_401' || message === 'ACCESS_LOGIN_REQUIRED'
+          ? '需要先通过 Cloudflare Access 登录'
+          : '云端不可用：' + message
+      );
     } finally {
       setBusy(false);
     }
   };
 
-  useEffect(() => { void refreshDocuments(); }, []);
+  useEffect(() => {
+    void refreshDocuments();
+  }, []);
 
   useEffect(() => {
     if (!syncEnabled || !selectedId || !revision) return;
@@ -98,7 +108,7 @@ function CloudSyncPanel({
       try {
         const result = await cloudRequest<{ revision: number; updated_at: string }>(
           '/api/documents/' + encodeURIComponent(selectedId),
-          { method: 'PUT', body: JSON.stringify({ title: '我的画板', content: value, revision }) },
+          { method: 'PUT', body: JSON.stringify({ title: '我的画板', content: value, revision }) }
         );
         setRevision(result.revision);
         localStorage.setItem(CLOUD_DOCUMENT_REVISION_KEY, String(result.revision));
@@ -106,9 +116,11 @@ function CloudSyncPanel({
         setStatus('已保存到云端 · ' + new Date(result.updated_at).toLocaleTimeString());
       } catch (error) {
         const message = error instanceof Error ? error.message : '保存失败';
-        setStatus(message === 'REVISION_CONFLICT'
-          ? '检测到云端版本冲突，请刷新并重新选择画板，未覆盖云端数据'
-          : '云端保存失败，当前内容仍保存在本机：' + message);
+        setStatus(
+          message === 'REVISION_CONFLICT'
+            ? '检测到云端版本冲突，请刷新并重新选择画板，未覆盖云端数据'
+            : '云端保存失败，当前内容仍保存在本机：' + message
+        );
       }
     }, 900);
     return () => window.clearTimeout(timer);
@@ -119,7 +131,7 @@ function CloudSyncPanel({
     try {
       const result = await cloudRequest<{ id: string; revision: number; updated_at: string }>(
         '/api/documents',
-        { method: 'POST', body: JSON.stringify({ title: '我的画板', content: value }) },
+        { method: 'POST', body: JSON.stringify({ title: '我的画板', content: value }) }
       );
       setSelectedId(result.id);
       setRevision(result.revision);
@@ -130,18 +142,32 @@ function CloudSyncPanel({
       setStatus('已创建云端副本，后续编辑将自动保存');
       await refreshDocuments();
     } catch (error) {
-      setStatus('创建云端副本失败，本机内容未受影响：' + (error instanceof Error ? error.message : '未知错误'));
+      setStatus(
+        '创建云端副本失败，本机内容未受影响：' +
+          (error instanceof Error ? error.message : '未知错误')
+      );
     } finally {
       setBusy(false);
     }
   };
 
   const restoreDocument = async (doc: CloudDocument) => {
-    if (!window.confirm('从云端恢复“' + doc.title + '”？如果本机画板有未保存内容，恢复会替换当前画板。')) return;
+    if (
+      !window.confirm(
+        '从云端恢复“' + doc.title + '”？如果本机画板有未保存内容，恢复会替换当前画板。'
+      )
+    )
+      return;
     setBusy(true);
     try {
-      const result = await cloudRequest<CloudDocumentPayload>('/api/documents/' + encodeURIComponent(doc.id));
-      const restored: AppValue = { children: result.children || [], viewport: result.viewport, theme: result.theme };
+      const result = await cloudRequest<CloudDocumentPayload>(
+        '/api/documents/' + encodeURIComponent(doc.id)
+      );
+      const restored: AppValue = {
+        children: result.children || [],
+        viewport: result.viewport,
+        theme: result.theme,
+      };
       onRestore(restored);
       setSelectedId(doc.id);
       setRevision(doc.revision);
@@ -151,7 +177,9 @@ function CloudSyncPanel({
       lastSavedValue.current = JSON.stringify(restored);
       setStatus('已恢复云端画板，后续编辑将自动保存');
     } catch (error) {
-      setStatus('恢复失败，本机内容未受影响：' + (error instanceof Error ? error.message : '未知错误'));
+      setStatus(
+        '恢复失败，本机内容未受影响：' + (error instanceof Error ? error.message : '未知错误')
+      );
     } finally {
       setBusy(false);
     }
@@ -168,32 +196,86 @@ function CloudSyncPanel({
   };
 
   return (
-    <section style={{ position: 'fixed', zIndex: 10000, right: 16, top: 16, width: expanded ? 320 : 'auto', maxWidth: 'calc(100vw - 32px)', background: '#fff', color: '#222', border: '1px solid #ddd', borderRadius: 10, boxShadow: '0 4px 18px #0002', fontSize: 13 }}>
+    <section
+      style={{
+        position: 'fixed',
+        zIndex: 10000,
+        right: 16,
+        top: 16,
+        width: expanded ? 320 : 'auto',
+        maxWidth: 'calc(100vw - 32px)',
+        background: '#fff',
+        color: '#222',
+        border: '1px solid #ddd',
+        borderRadius: 10,
+        boxShadow: '0 4px 18px #0002',
+        fontSize: 13,
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 10 }}>
         <strong style={{ flex: 1 }}>云端自动保存（测试预览）</strong>
-        <button type="button" onClick={() => setExpanded(!expanded)}>{expanded ? '收起' : '管理'}</button>
+        <button type="button" onClick={() => setExpanded(!expanded)}>
+          {expanded ? '收起' : '管理'}
+        </button>
       </div>
-      {expanded && <div style={{ padding: '0 10px 10px' }}>
-        <div style={{ marginBottom: 8, lineHeight: 1.5, overflowWrap: 'anywhere' }}>{status}</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-          <button type="button" disabled={busy} onClick={() => void refreshDocuments()}>刷新云端列表</button>
-          <button type="button" disabled={busy} onClick={() => void createCloudCopy()}>将当前画板存为云端副本</button>
-          {selectedId && <button type="button" onClick={stopCloudSync}>暂停自动保存</button>}
-        </div>
-        {documents.length > 0 && <>
-          <div style={{ fontWeight: 600, margin: '8px 0' }}>云端画板（恢复前会再次确认）</div>
-          <div style={{ maxHeight: 180, overflowY: 'auto' }}>
-            {documents.map((doc) => <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderTop: '1px solid #eee' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.title}</div>
-                <small>版本 {doc.revision} · {new Date(doc.updated_at).toLocaleString()}</small>
-              </div>
-              <button type="button" disabled={busy} onClick={() => void restoreDocument(doc)}>恢复</button>
-            </div>)}
+      {expanded && (
+        <div style={{ padding: '0 10px 10px' }}>
+          <div style={{ marginBottom: 8, lineHeight: 1.5, overflowWrap: 'anywhere' }}>{status}</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+            <button type="button" disabled={busy} onClick={() => void refreshDocuments()}>
+              刷新云端列表
+            </button>
+            <button type="button" disabled={busy} onClick={() => void createCloudCopy()}>
+              将当前画板存为云端副本
+            </button>
+            {selectedId && (
+              <button type="button" onClick={stopCloudSync}>
+                暂停自动保存
+              </button>
+            )}
           </div>
-        </>}
-        <small style={{ display: 'block', marginTop: 8, color: '#666' }}>本机仍会即时保存。云端冲突时不会自动覆盖另一版本；首次使用前请先登录。</small>
-      </div>}
+          {documents.length > 0 && (
+            <>
+              <div style={{ fontWeight: 600, margin: '8px 0' }}>云端画板（恢复前会再次确认）</div>
+              <div style={{ maxHeight: 180, overflowY: 'auto' }}>
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '7px 0',
+                      borderTop: '1px solid #eee',
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {doc.title}
+                      </div>
+                      <small>
+                        版本 {doc.revision} · {new Date(doc.updated_at).toLocaleString()}
+                      </small>
+                    </div>
+                    <button type="button" disabled={busy} onClick={() => void restoreDocument(doc)}>
+                      恢复
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <small style={{ display: 'block', marginTop: 8, color: '#666' }}>
+            本机仍会即时保存。云端冲突时不会自动覆盖另一版本；首次使用前请先登录。
+          </small>
+        </div>
+      )}
     </section>
   );
 }
@@ -242,11 +324,14 @@ export function App() {
 
   return (
     <>
-      <CloudSyncPanel value={value} onRestore={(next) => {
-        void localforage.setItem(MAIN_BOARD_CONTENT_KEY, next);
-        setValue(next);
-        setTutorial(!next.children || next.children.length === 0);
-      }} />
+      <CloudSyncPanel
+        value={value}
+        onRestore={(next) => {
+          void localforage.setItem(MAIN_BOARD_CONTENT_KEY, next);
+          setValue(next);
+          setTutorial(!next.children || next.children.length === 0);
+        }}
+      />
       <Drawnix
         value={value.children}
         viewport={value.viewport}
