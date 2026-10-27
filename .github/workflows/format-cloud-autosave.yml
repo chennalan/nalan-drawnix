@@ -6,7 +6,7 @@ on:
     paths:
       - apps/web/src/app/app.tsx
       - cloud/worker/src/index.ts
-      - functions/api/documents/[[id]].ts
+      - functions/**
 
 permissions:
   contents: write
