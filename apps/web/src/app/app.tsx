@@ -65,7 +65,7 @@ function CloudSyncPanel({
   const [documents, setDocuments] = useState<CloudDocument[]>([]);
   const [selectedId, setSelectedId] = useState(() => localStorage.getItem(CLOUD_DOCUMENT_ID_KEY) || '');
   const [revision, setRevision] = useState(() => Number(localStorage.getItem(CLOUD_DOCUMENT_REVISION_KEY) || 0));
-  const [status, setStatus] = useState('尚未检查登录状态');
+  const [status, setStatus] = useState('等待检查云端连接');
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [syncEnabled, setSyncEnabled] = useState(false);
