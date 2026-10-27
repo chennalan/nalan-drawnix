@@ -2,8 +2,7 @@ name = "nalan-drawnix"
 pages_build_output_dir = "./dist/apps/web"
 compatibility_date = "2026-10-27"
 
-# Intentionally no cloud bindings in production. Only preview deployments
-# receive the dedicated test database, private test bucket, and Access JWT config.
+# Preview is isolated from production data.
 [env.preview.vars]
 ACCESS_TEAM_DOMAIN = "withered-thunder-c736.cloudflareaccess.com"
 ACCESS_AUD = "42b8e46d83a2947d081ae91ce3eccb69701e3c6d63a6ca38e4289d851ccc603a"
@@ -17,3 +16,18 @@ migrations_dir = "cloud/migrations"
 [[env.preview.r2_buckets]]
 binding = "DOCS"
 bucket_name = "nalan-drawnix-documents-test"
+
+# Production uses dedicated production storage and its own Access application audience.
+[env.production.vars]
+ACCESS_TEAM_DOMAIN = "withered-thunder-c736.cloudflareaccess.com"
+ACCESS_AUD = "64b35eeb3b57ee6c84e06559e22d9818512fb71d1986578ca04fdce47b3c418a"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "nalan-drawnix-production"
+database_id = "48f8877e-5b5c-427a-a473-1c64b85af56a"
+migrations_dir = "cloud/migrations"
+
+[[env.production.r2_buckets]]
+binding = "DOCS"
+bucket_name = "nalan-drawnix-documents-production"
