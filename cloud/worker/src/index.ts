@@ -67,8 +67,9 @@ function decodeJsonPart<T>(value: string): T {
 }
 
 async function verifyAccessJwt(request: Request, env: Env): Promise<AccessClaims> {
+  const accessAssertion = request.headers.get("Cf-Access-Jwt-Assertion") || "";
   const authorization = request.headers.get("Authorization") || "";
-  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+  const token = accessAssertion || (authorization.startsWith("Bearer ") ? authorization.slice(7) : "");
   if (!token) throw new Error("UNAUTHORIZED");
 
   const parts = token.split(".");
