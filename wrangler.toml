@@ -1,0 +1,20 @@
+name = "nalan-drawnix"
+pages_build_output_dir = "./dist/apps/web"
+compatibility_date = "2026-10-27"
+
+# Test-only bindings. Do not replace with nalan-work or nalan-mindmap.
+[[d1_databases]]
+binding = "DB"
+database_name = "nalan-drawnix-test"
+database_id = "4c062991-181c-49e1-8897-f7bb4cb46ee2"
+migrations_dir = "cloud/migrations"
+
+[[r2_buckets]]
+binding = "DOCS"
+bucket_name = "nalan-drawnix-documents-test"
+
+[vars]
+# These remain intentionally invalid until Cloudflare Access is configured.
+ACCESS_TEAM_DOMAIN = "REPLACE_WITH_ACCESS_TEAM_DOMAIN"
+ACCESS_AUD = "REPLACE_WITH_ACCESS_APPLICATION_AUD"
+ALLOWED_ORIGIN = "https://nalan-drawnix.pages.dev"
