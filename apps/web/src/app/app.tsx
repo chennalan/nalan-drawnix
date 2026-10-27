@@ -79,7 +79,7 @@ function CloudSyncPanel({
       setStatus('云端已连接');
     } catch (error) {
       const message = error instanceof Error ? error.message : '连接失败';
-      setStatus(message === 'UNAUTHORIZED' || message === 'HTTP_401'
+      setStatus(message === 'UNAUTHORIZED' || message === 'HTTP_401' || message === 'ACCESS_LOGIN_REQUIRED'
         ? '需要先通过 Cloudflare Access 登录'
         : '云端不可用：' + message);
     } finally {
