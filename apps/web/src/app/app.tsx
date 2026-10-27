@@ -86,7 +86,7 @@ function CloudSyncPanel({
   useEffect(() => { void refreshDocuments(); }, []);
 
   useEffect(() => {
-    if (!selectedId || !revision || !expanded) return;
+    if (!selectedId || !revision) return;
     const serialized = JSON.stringify(value);
     if (serialized === lastSavedValue.current) return;
     const timer = window.setTimeout(async () => {
@@ -108,7 +108,7 @@ function CloudSyncPanel({
       }
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [value, selectedId, revision, expanded]);
+  }, [value, selectedId, revision]);
 
   const createCloudCopy = async () => {
     setBusy(true);
