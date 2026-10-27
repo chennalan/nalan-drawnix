@@ -17,4 +17,3 @@ bucket_name = "nalan-drawnix-documents-test"
 # These remain intentionally invalid until Cloudflare Access is configured.
 ACCESS_TEAM_DOMAIN = "REPLACE_WITH_ACCESS_TEAM_DOMAIN"
 ACCESS_AUD = "REPLACE_WITH_ACCESS_APPLICATION_AUD"
-ALLOWED_ORIGIN = "https://nalan-drawnix.pages.dev"
