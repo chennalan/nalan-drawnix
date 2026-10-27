@@ -1,0 +1,23 @@
+name = "nalan-drawnix-cloud-api"
+main = "src/index.ts"
+compatibility_date = "2026-10-27"
+
+# Bindings are intentionally left unconfigured until dedicated resources are reviewed.
+# Never bind this worker to the existing nalan-work or nalan-mindmap databases.
+# After creating a dedicated D1 database, replace the placeholder database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "nalan-drawnix-test"
+database_id = "REPLACE_WITH_DEDICATED_D1_DATABASE_ID"
+migrations_dir = "../migrations"
+
+[[r2_buckets]]
+binding = "DOCS"
+bucket_name = "nalan-drawnix-documents-test"
+
+[vars]
+# Set these to the Cloudflare Access team domain and Access application's audience.
+# These are configuration values, not secrets.
+ACCESS_TEAM_DOMAIN = "REPLACE_WITH_ACCESS_TEAM_DOMAIN"
+ACCESS_AUD = "REPLACE_WITH_ACCESS_APPLICATION_AUD"
+ALLOWED_ORIGIN = "https://nalan-drawnix.pages.dev"
