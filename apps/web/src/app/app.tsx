@@ -170,7 +170,7 @@ function CloudSyncPanel({
   return (
     <section style={{ position: 'fixed', zIndex: 10000, right: 16, top: 16, width: expanded ? 320 : 'auto', maxWidth: 'calc(100vw - 32px)', background: '#fff', color: '#222', border: '1px solid #ddd', borderRadius: 10, boxShadow: '0 4px 18px #0002', fontSize: 13 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 10 }}>
-        <strong style={{ flex: 1 }}>云端自动保存</strong>
+        <strong style={{ flex: 1 }}>云端自动保存（测试预览）</strong>
         <button type="button" onClick={() => setExpanded(!expanded)}>{expanded ? '收起' : '管理'}</button>
       </div>
       {expanded && <div style={{ padding: '0 10px 10px' }}>
