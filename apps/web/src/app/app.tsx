@@ -76,7 +76,7 @@ function CloudSyncPanel({
     try {
       const result = await cloudRequest<{ documents: CloudDocument[] }>('/api/documents');
       setDocuments(result.documents || []);
-      setStatus('云端已连接');
+      setStatus('云端接口可用；请选择恢复或创建云端副本');
     } catch (error) {
       const message = error instanceof Error ? error.message : '连接失败';
       setStatus(message === 'UNAUTHORIZED' || message === 'HTTP_401' || message === 'ACCESS_LOGIN_REQUIRED'
