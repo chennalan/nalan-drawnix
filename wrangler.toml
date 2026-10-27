@@ -15,5 +15,5 @@ bucket_name = "nalan-drawnix-documents-test"
 
 [vars]
 # These remain intentionally invalid until Cloudflare Access is configured.
-ACCESS_TEAM_DOMAIN = "REPLACE_WITH_ACCESS_TEAM_DOMAIN"
-ACCESS_AUD = "REPLACE_WITH_ACCESS_APPLICATION_AUD"
+ACCESS_TEAM_DOMAIN = "withered-thunder-c736.cloudflareaccess.com"
+ACCESS_AUD = "42b8e46d83a2947d081ae91ce3eccb69701e3c6d63a6ca38e4289d851ccc603a"
