@@ -12,6 +12,7 @@ interface AccessClaims {
   aud?: string[] | string;
   iss?: string;
   exp?: number;
+  nbf?: number;
 }
 
 interface DocumentRow {
@@ -81,7 +82,8 @@ async function verifyAccessJwt(request: Request, env: Env): Promise<AccessClaims
   const issuer = `https://${teamDomain}`;
 
   if (header.alg !== "RS256" || !header.kid) throw new Error("UNAUTHORIZED");
-  if (claims.iss !== issuer || !claims.sub || !claims.exp || claims.exp <= Math.floor(Date.now() / 1000)) {
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (claims.iss !== issuer || !claims.sub || !claims.exp || claims.exp <= nowSeconds || (claims.nbf !== undefined && claims.nbf > nowSeconds + 60)) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -128,7 +130,7 @@ function parsePayload(value: unknown): { text: string; bytes: number } {
 }
 
 function isId(value: string): boolean {
-  return /^[0-9a-f-]{36}$/i.test(value);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 async function handle(request: Request, env: Env): Promise<Response> {
