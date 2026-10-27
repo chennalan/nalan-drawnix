@@ -39,7 +39,7 @@ async function cloudRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
     credentials: 'same-origin',
-    headers: { 'content-type': 'application/json', ...(init?.headers || {}) },
+    headers: { 'content-type': 'application/json', ...init?.headers },
   });
   if (!response.ok) {
     let code = 'HTTP_' + response.status;
