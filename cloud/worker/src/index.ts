@@ -25,6 +25,8 @@ interface DocumentRow {
 }
 
 const MAX_PAYLOAD_BYTES = 2 * 1024 * 1024;
+// A JSON envelope can escape payload characters several times; bound the incoming body too.
+const MAX_REQUEST_BYTES = 14 * 1024 * 1024;
 const TITLE_MAX_LENGTH = 160;
 
 function json(data: unknown, status = 200, origin = ""): Response {
@@ -113,6 +115,42 @@ async function verifyAccessJwt(request: Request, env: Env): Promise<AccessClaims
   return claims;
 }
 
+async function readJsonRequest<T>(request: Request): Promise<T> {
+  const contentLength = Number(request.headers.get("Content-Length") || 0);
+  if (contentLength > MAX_REQUEST_BYTES) throw new Error("REQUEST_TOO_LARGE");
+  if (!request.body) throw new Error("INVALID_JSON");
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_REQUEST_BYTES) {
+        await reader.cancel();
+        throw new Error("REQUEST_TOO_LARGE");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return JSON.parse(new TextDecoder().decode(bytes)) as T;
+  } catch {
+    throw new Error("INVALID_JSON");
+  }
+}
+
 function normalizeTitle(value: unknown): string {
   if (typeof value !== "string") return "未命名画板";
   const title = value.trim().slice(0, TITLE_MAX_LENGTH);
@@ -164,7 +202,10 @@ async function handle(request: Request, env: Env): Promise<Response> {
 
   if (segments.length === 2 && request.method === "POST") {
     let body: { title?: unknown; content?: unknown };
-    try { body = await request.json() as typeof body; } catch { return json({ error: "INVALID_JSON" }, 400, origin); }
+    try { body = await readJsonRequest<typeof body>(request); } catch (error) {
+      const message = error instanceof Error ? error.message : "INVALID_JSON";
+      return json({ error: message }, message === "REQUEST_TOO_LARGE" ? 413 : 400, origin);
+    }
     let payload: { text: string; bytes: number };
     try { payload = parsePayload(body.content); } catch (error) {
       const message = error instanceof Error ? error.message : "INVALID_PAYLOAD";
