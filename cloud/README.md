@@ -11,6 +11,10 @@ The cloud autosave implementation is wired to the Drawnix UI on the `feature/clo
 - Cloudflare Access must protect `nalan-drawnix.pages.dev`. The Pages Function passes the request to the API, which cryptographically validates the Access JWT and scopes every document query to its verified subject.
 - D1 stores metadata; the private R2 bucket stores document JSON. The UI does not silently replace local content with cloud content: restore requires confirmation. Revision conflicts are reported and do not overwrite the other revision.
 
+## Preview deployment watch paths
+
+The Pages project watches the application source, Pages Functions, cloud API/configuration, and build manifests so changes to this feature trigger preview deployments.
+
 ## Dedicated test resources
 
 - D1: `nalan-drawnix-test`
