@@ -3,7 +3,6 @@ interface Env {
   DOCS: R2Bucket;
   ACCESS_TEAM_DOMAIN: string;
   ACCESS_AUD: string;
-  ALLOWED_ORIGIN: string;
 }
 
 interface AccessClaims {
@@ -45,9 +44,11 @@ function json(data: unknown, status = 200, origin = ""): Response {
   });
 }
 
-function getOrigin(request: Request, env: Env): string {
+function getOrigin(request: Request, _env: Env): string {
   const origin = request.headers.get("Origin") || "";
-  return origin === env.ALLOWED_ORIGIN ? origin : "";
+  // The API is mounted on the same Pages origin. Reject cross-origin browser calls
+  // without hard-coding a production hostname, so branch previews work safely too.
+  return origin === new URL(request.url).origin ? origin : "";
 }
 
 function corsHeaders(origin: string): HeadersInit {
