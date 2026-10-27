@@ -245,7 +245,10 @@ async function handle(request: Request, env: Env): Promise<Response> {
 
     if (request.method === "PUT") {
       let body: { title?: unknown; content?: unknown; revision?: unknown };
-      try { body = await request.json() as typeof body; } catch { return json({ error: "INVALID_JSON" }, 400, origin); }
+      try { body = await readJsonRequest<typeof body>(request); } catch (error) {
+        const message = error instanceof Error ? error.message : "INVALID_JSON";
+        return json({ error: message }, message === "REQUEST_TOO_LARGE" ? 413 : 400, origin);
+      }
       if (!Number.isInteger(body.revision) || body.revision !== row.revision) {
         return json({ error: "REVISION_CONFLICT", revision: row.revision }, 409, origin);
       }
