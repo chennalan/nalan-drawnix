@@ -92,7 +92,7 @@ async function verifyAccessJwt(request: Request, env: Env): Promise<AccessClaims
     cf: { cacheTtl: 300, cacheEverything: true },
   } as RequestInit);
   if (!response.ok) throw new Error("AUTH_PROVIDER_UNAVAILABLE");
-  const jwks = await response.json() as { keys?: JsonWebKey[] & { kid?: string; alg?: string }[] };
+  const jwks = await response.json() as { keys?: (JsonWebKey & { kid?: string; alg?: string })[] };
   const jwk = jwks.keys?.find((key) => key.kid === header.kid);
   if (!jwk) throw new Error("UNAUTHORIZED");
 
@@ -213,20 +213,20 @@ async function handle(request: Request, env: Env): Promise<Response> {
 
       const now = new Date().toISOString();
       const nextRevision = row.revision + 1;
-      const update = await env.DB.prepare(
-        "UPDATE documents SET title = ?, revision = ?, payload_bytes = ?, updated_at = ? WHERE id = ? AND owner_id = ? AND revision = ?",
-      ).bind(normalizeTitle(body.title ?? row.title), nextRevision, payload.bytes, now, id, ownerId, row.revision).run();
-      if (!update.success || update.meta.changes !== 1) {
-        return json({ error: "REVISION_CONFLICT" }, 409, origin);
-      }
+      const nextObjectKey = "users/" + encodeURIComponent(ownerId) + "/documents/" + id + "/revision-" + nextRevision + ".json";
       try {
-        await env.DOCS.put(row.object_key, payload.text, { httpMetadata: { contentType: "application/json; charset=utf-8" } });
+        await env.DOCS.put(nextObjectKey, payload.text, { httpMetadata: { contentType: "application/json; charset=utf-8" } });
       } catch {
-        await env.DB.prepare(
-          "UPDATE documents SET revision = ?, payload_bytes = ?, updated_at = ? WHERE id = ? AND owner_id = ? AND revision = ?",
-        ).bind(row.revision, row.payload_bytes, row.updated_at, id, ownerId, nextRevision).run();
         return json({ error: "SAVE_FAILED" }, 500, origin);
       }
+      const update = await env.DB.prepare(
+        "UPDATE documents SET title = ?, object_key = ?, revision = ?, payload_bytes = ?, updated_at = ? WHERE id = ? AND owner_id = ? AND revision = ?",
+      ).bind(normalizeTitle(body.title ?? row.title), nextObjectKey, nextRevision, payload.bytes, now, id, ownerId, row.revision).run();
+      if (!update.success || update.meta.changes !== 1) {
+        await env.DOCS.delete(nextObjectKey);
+        return json({ error: "REVISION_CONFLICT" }, 409, origin);
+      }
+      await env.DOCS.delete(row.object_key);
       return json({ id, title: normalizeTitle(body.title ?? row.title), revision: nextRevision, updated_at: now }, 200, origin);
     }
 
