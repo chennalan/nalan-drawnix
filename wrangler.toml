@@ -2,18 +2,18 @@ name = "nalan-drawnix"
 pages_build_output_dir = "./dist/apps/web"
 compatibility_date = "2026-10-27"
 
-# Test-only bindings. Do not replace with nalan-work or nalan-mindmap.
-[[d1_databases]]
+# Intentionally no cloud bindings in production. Only preview deployments
+# receive the dedicated test database, private test bucket, and Access JWT config.
+[env.preview.vars]
+ACCESS_TEAM_DOMAIN = "withered-thunder-c736.cloudflareaccess.com"
+ACCESS_AUD = "42b8e46d83a2947d081ae91ce3eccb69701e3c6d63a6ca38e4289d851ccc603a"
+
+[[env.preview.d1_databases]]
 binding = "DB"
 database_name = "nalan-drawnix-test"
 database_id = "4c062991-181c-49e1-8897-f7bb4cb46ee2"
 migrations_dir = "cloud/migrations"
 
-[[r2_buckets]]
+[[env.preview.r2_buckets]]
 binding = "DOCS"
 bucket_name = "nalan-drawnix-documents-test"
-
-[vars]
-# These remain intentionally invalid until Cloudflare Access is configured.
-ACCESS_TEAM_DOMAIN = "withered-thunder-c736.cloudflareaccess.com"
-ACCESS_AUD = "42b8e46d83a2947d081ae91ce3eccb69701e3c6d63a6ca38e4289d851ccc603a"
