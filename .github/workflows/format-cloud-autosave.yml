@@ -1,0 +1,38 @@
+name: Format cloud autosave files
+
+on:
+  push:
+    branches: [feature/cloud-autosave]
+    paths:
+      - apps/web/src/app/app.tsx
+      - cloud/worker/src/index.ts
+      - functions/api/documents/[[id]].ts
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: feature/cloud-autosave
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx oxfmt apps/web/src/app/app.tsx cloud/worker/src/index.ts 'functions/api/documents/[[id]].ts'
+      - name: Commit formatting changes
+        run: |
+          if git diff --quiet; then
+            echo "Formatting is already clean."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/src/app/app.tsx cloud/worker/src/index.ts 'functions/api/documents/[[id]].ts'
+          git commit -m "style: format cloud autosave files"
+          git push origin HEAD:feature/cloud-autosave
