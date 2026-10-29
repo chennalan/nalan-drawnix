@@ -23,7 +23,8 @@ interface DocumentRow {
   updated_at: string;
 }
 
-const MAX_PAYLOAD_BYTES = 2 * 1024 * 1024;
+// Whiteboard documents may contain embedded images; allow larger payloads while keeping a bounded request size.
+const MAX_PAYLOAD_BYTES = 10 * 1024 * 1024;
 // A JSON envelope can escape payload characters several times; bound the incoming body too.
 const MAX_REQUEST_BYTES = 14 * 1024 * 1024;
 const TITLE_MAX_LENGTH = 160;
